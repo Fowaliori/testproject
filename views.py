@@ -1,18 +1,32 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from .models import Article
+from .forms import ArticleForm
+from django.views.generic import DetailView
+
+def news_home(request):
+    news = Article.objects.order_by('id')
+    return render(request, 'news/news_home.html',{'news': news})
+
+class NewsDetailView(DetailView):
+    model = Article
+    template_name = 'news/details_view.html'
+    context_object_name = 'article'
+
+def create(request):
+    error=''
+    if request.method == 'POST':
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('news_home')
+        else:
+            error = 'Форма была неверной'
 
 
-def index(request):
-    data ={
-        'title': 'Список аниме',
-        'animes': ['Naruto','Bleach', 'Evangelion']
+    form = ArticleForm()
+
+    data = {
+        'form': form,
+        'error': error
     }
-    return render(request, 'main/index.html', data)
-
-
-def about(request):
-    data ={
-        'title': 'Режиссёры',
-        'authors': ['Масаси Кисимото', 'Тайто Кубо', 'Ёсиюки Садамото']
-    }
-    return render(request, 'main/about.html',data)
+    return render(request, 'news/create.html',data)
